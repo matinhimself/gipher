@@ -4,6 +4,12 @@ from gifer import Timeline
 
 
 def files_to_gif(*args, result_file_path='./result.gif'):
+    """
+    will compose gif with (0,0) as position of every layer
+    and keeping the size of the image/gif.
+
+    order of file paths will be considered as order of layers.
+    """
     frames = Timeline()
     for f in args:
         if re.match(".*.gif", f):
@@ -15,6 +21,11 @@ def files_to_gif(*args, result_file_path='./result.gif'):
 
 def files_to_gif_with_meta(*args, result_file_path='./result2.gif'):
     """
+    will compose gif with given dict for each file as
+    metadata, file_path is required, and position origin is
+    from top left of the image.
+
+
     :Arguments:
         * `Sample` *
         {
@@ -40,10 +51,16 @@ def files_to_gif_with_meta(*args, result_file_path='./result2.gif'):
 
 
 if __name__ == '__main__':
+    # will compose gif with (0,0) as position of every layer
+    # and keeping the size of the image/gif.
+    #
+    # order of file paths will be considered as order of layers.
 
-    # will compose gif
     files_to_gif("./samples/1.gif", "./samples/2.gif", "./samples/2.gif", "./samples/5.gif", "./samples/logo.png")
 
+    # will compose gif with given dict for each file as
+    # metadata, file_path is required, and position origin is
+    # from top left of the image.
     files_to_gif_with_meta(
         {
             'file_path': './samples/1.gif',

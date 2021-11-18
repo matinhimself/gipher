@@ -1,0 +1,1 @@
+asked functions and examples are available in [main.py](src/main/main.py).
