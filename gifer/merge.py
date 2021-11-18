@@ -68,6 +68,7 @@ class Timeline:
                 position of frame
         """
         layer = kwargs.pop('layer', self._layer_counter)
+        self._layer_counter += 1
 
         img = Image.open(filepath)
 
