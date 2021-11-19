@@ -66,7 +66,17 @@ class Timeline:
                 change order of layers
             * *position* (``Tuple``) --
                 position of frame
+
+
+            # Todo:
+                fade
+                loop
+                from_time
+                to_time
+                from_time
+                from_time
         """
+
         layer = kwargs.pop('layer', self._layer_counter)
         self._layer_counter = max(layer + 1, self._layer_counter + 1)
 
@@ -88,6 +98,16 @@ class Timeline:
                 change order of layers
             * *position* (``Tuple``) --
                 position of frame
+
+                            is_main
+
+            # Todo:
+                fade
+                loop
+                from_time
+                to_time
+                from_time
+                from_time
         """
         layer = kwargs.pop('layer', self._layer_counter)
         self._layer_counter = max(layer + 1, self._layer_counter + 1)
