@@ -68,7 +68,7 @@ class Timeline:
                 position of frame
         """
         layer = kwargs.pop('layer', self._layer_counter)
-        self._layer_counter += 1
+        self._layer_counter = max(layer + 1, self._layer_counter + 1)
 
         img = Image.open(filepath)
 
@@ -90,7 +90,7 @@ class Timeline:
                 position of frame
         """
         layer = kwargs.pop('layer', self._layer_counter)
-        self._layer_counter += 1
+        self._layer_counter = max(layer + 1, self._layer_counter + 1)
 
         gif = Image.open(filepath)
         t = 0
