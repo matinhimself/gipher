@@ -63,12 +63,14 @@ if __name__ == '__main__':
     # from top left of the image.
     files_to_gif_with_meta(
         {
-            'file_path': './samples/1.gif',
+            'file_path': './samples/6.gif',
         },
         {
             'file_path': './samples/2.gif',
             'size': (100, 100),
-            'position': (300, 300)
+            'position': (150, 150),
+            'from': 1000,
+            'to': 2500,
         },
         {
             'file_path': './samples/4.gif',
@@ -80,11 +82,14 @@ if __name__ == '__main__':
             'file_path': './samples/5.gif',
             'size': (40, 40),
             'layer': 2,
-            'position': (70, 50)
+            'position': (70, 50),
+            'loop': True
         },
         {
             'file_path': './samples/logo.png',
             'ratio': 0.2,
+            'from': 200,
+            'to': 1000,
             'position': (350, 20)
         },
 

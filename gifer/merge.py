@@ -1,3 +1,6 @@
+import operator
+from functools import reduce
+
 from PIL import Image, ImageSequence
 from collections import OrderedDict
 import imageio as iio
@@ -14,6 +17,12 @@ class Timeline:
             self.position = position
             self.image = image.resize(self.size, Image.ANTIALIAS)
             self.layer = layer
+            self._from = kwargs.pop('from', 0)
+            self._to = kwargs.pop('to', -1)
+
+        def is_time(self, t: int):
+            return self._from < t and (self._to >= t or
+                                       self._to == -1)
 
         def __str__(self):
             return f"static image layer:{self.layer}"
@@ -25,6 +34,8 @@ class Timeline:
         def __init__(self, image, duration: int, layer: int, t: int, position: Tuple = (0, 0), **kwargs):
             self.time = t
             self.duration = duration
+            self._from = kwargs.pop('from', 0)
+            self._to = kwargs.pop('from', -1)
             super().__init__(image, layer, position, **kwargs)
 
         def __str__(self):
@@ -33,11 +44,15 @@ class Timeline:
         def __repr__(self):
             return self.__str__()
 
-    def __init__(self):
+    def __init__(self, trim_base=True):
+        # Trim base will assure that composed gif
+        # will finish as soon as layer 0 duration finishes
+        self.trim_base = trim_base
         self._layer_counter = 0
         self._remaining_frames: List[Timeline.DynamicFrame] = []
         self._max_duration = 0
         self._static_frames: List[Timeline.Frame] = []
+        self._max_time = -1
         self.timeline = OrderedDict()
 
     def _add(self, f: DynamicFrame):
@@ -109,16 +124,36 @@ class Timeline:
                 from_time
                 from_time
         """
+        loop = kwargs.pop('loop', False)
+
+        is_base_layer = self._layer_counter == 0 and self.trim_base
         layer = kwargs.pop('layer', self._layer_counter)
         self._layer_counter = max(layer + 1, self._layer_counter + 1)
 
         gif = Image.open(filepath)
-        t = 0
+
+        # can use final t but we need it for adding loops
+        gif_duration = reduce(operator.add, [img.info['duration'] for img in ImageSequence.Iterator(gif)])
+
+        from_ = kwargs.pop('from', 0)
+        t = from_
+        to = kwargs.pop('to', -1)
+        if to == -1 and is_base_layer and loop:
+            raise Exception("can't use loop layer as base layer when `to` is not provided.")
+
         for img in ImageSequence.Iterator(gif):
             dur = img.info['duration']
-            self._add(Timeline.DynamicFrame(img.copy(), dur, layer, t, **kwargs))
+            if t > to != -1 or t > self._max_time != -1:
+                break
+            self._add(Timeline.DynamicFrame(img.copy(), dur, layer, t, _from=from_, _to=to, **kwargs))
+            if loop:
+                for i in range(t+gif_duration, self._max_time, gif_duration):
+                    self._add(Timeline.DynamicFrame(img.copy(), dur, layer, i, _from=from_, _to=to, **kwargs))
+
             t += dur
-        self._max_duration = max(self._max_duration, t)
+
+        self._max_time = gif_duration if is_base_layer else self._max_time
+        self._max_duration = max(self._max_duration, gif_duration)
 
     def save(self, filepath: str):
         times = sorted(list(self.timeline.keys()))
@@ -131,6 +166,8 @@ class Timeline:
                 b = sorted(bucket + self._static_frames, key=lambda x: x.layer)
                 background = b[0].image.convert('RGBA')
                 for foreground in b[1:]:
+                    if type(foreground) is Timeline.Frame and not foreground.is_time(time):
+                        continue
                     background.paste(foreground.image.convert('RGBA'), foreground.position,
                                      foreground.image.convert('RGBA'))
                 writer.append_data(numpy.array(background))
