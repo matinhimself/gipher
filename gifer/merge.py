@@ -91,13 +91,21 @@ class Timeline:
                 from_time
                 from_time
         """
+        is_base_layer = self._layer_counter == 0 and self.trim_base
+        from_ = kwargs.pop('from', 0)
+        if from_ > 0 and is_base_layer:
+            raise Exception("can't use image layer as base layer `from` is not 0.")
+
+        to = kwargs.pop('to', -1)
+        if to == -1 and is_base_layer:
+            raise Exception("can't use image layer as base layer when `to` is not provided.")
 
         layer = kwargs.pop('layer', self._layer_counter)
         self._layer_counter = max(layer + 1, self._layer_counter + 1)
 
         img = Image.open(filepath)
 
-        self._static_frames.append(Timeline.Frame(img, layer, **kwargs))
+        self._static_frames.append(Timeline.Frame(img, layer, from_=from_, to=to, **kwargs))
 
     def add_gif(self, filepath: str, **kwargs):
         """
@@ -145,10 +153,12 @@ class Timeline:
             dur = img.info['duration']
             if t > to != -1 or t > self._max_time != -1:
                 break
-            self._add(Timeline.DynamicFrame(img.copy(), dur, layer, t, _from=from_, _to=to, **kwargs))
+
+            img_copy = img.copy()
+            self._add(Timeline.DynamicFrame(img_copy, dur, layer, t, _from=from_, _to=to, **kwargs))
             if loop:
-                for i in range(t+gif_duration, self._max_time, gif_duration):
-                    self._add(Timeline.DynamicFrame(img.copy(), dur, layer, i, _from=from_, _to=to, **kwargs))
+                for i in range(t + gif_duration, self._max_time, gif_duration):
+                    self._add(Timeline.DynamicFrame(img_copy, dur, layer, i, _from=from_, _to=to, **kwargs))
 
             t += dur
 
